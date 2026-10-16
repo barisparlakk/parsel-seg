@@ -1,0 +1,28 @@
+# Data and model artifacts
+data/*
+!data/.gitkeep
+checkpoints/
+runs/
+outputs/
+*.tif
+*.tiff
+*.pt
+*.pth
+*.onnx
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Frontend
+web/node_modules/
+web/dist/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
