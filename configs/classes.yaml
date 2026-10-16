@@ -1,0 +1,39 @@
+# Single source of truth for the Parsel class taxonomy.
+# `classes` are the main (coarse) classes; `subclasses` refine them.
+# Every subclass points to its parent via `parent`. Subclass ids are unique
+# across the file; each main class has a `default` subclass used when only the
+# coarse label is known.
+
+ignore_index: 255
+
+classes:
+  - {id: 0, name: background,   name_tr: Arka plan / Diğer, color: [0, 0, 0]}
+  - {id: 1, name: buildings,    name_tr: Yapılar,           color: [220, 50, 47]}
+  - {id: 2, name: construction, name_tr: İnşaat,            color: [255, 140, 0]}
+  - {id: 3, name: vacant_land,  name_tr: Boş alan,          color: [210, 180, 140]}
+  - {id: 4, name: agriculture,  name_tr: Tarım,             color: [154, 205, 50]}
+  - {id: 5, name: transport,    name_tr: Ulaşım,            color: [128, 128, 128]}
+  - {id: 6, name: water,        name_tr: Su,                color: [30, 144, 255]}
+  - {id: 7, name: vegetation,   name_tr: Bitki örtüsü,      color: [34, 139, 34]}
+  - {id: 8, name: energy,       name_tr: Enerji,            color: [148, 0, 211]}
+
+subclasses:
+  - {id: 0,  parent: 0, name: background,        name_tr: Arka plan,              color: [0, 0, 0]}
+  - {id: 1,  parent: 1, name: residential,       name_tr: Konut,                  color: [220, 50, 47]}
+  - {id: 2,  parent: 1, name: industrial,        name_tr: Sanayi / depo,          color: [178, 34, 34]}
+  - {id: 3,  parent: 1, name: greenhouse,        name_tr: Sera,                   color: [255, 105, 97]}
+  - {id: 4,  parent: 2, name: active_construction, name_tr: Aktif inşaat alanı,   color: [255, 140, 0]}
+  - {id: 5,  parent: 3, name: vacant_lot,        name_tr: Boş arsa,               color: [210, 180, 140]}
+  - {id: 6,  parent: 3, name: bare_soil,         name_tr: Çıplak toprak,          color: [188, 143, 143]}
+  - {id: 7,  parent: 4, name: cropland,          name_tr: Ekili tarla,            color: [154, 205, 50]}
+  - {id: 8,  parent: 4, name: fallow,            name_tr: Sürülmüş / nadas,       color: [139, 119, 101]}
+  - {id: 9,  parent: 4, name: orchard,           name_tr: Meyve bahçesi,          color: [107, 142, 35]}
+  - {id: 10, parent: 5, name: paved_road,        name_tr: Asfalt yol,             color: [128, 128, 128]}
+  - {id: 11, parent: 5, name: dirt_road,         name_tr: Toprak yol,             color: [169, 169, 169]}
+  - {id: 12, parent: 5, name: parking,           name_tr: Otopark,                color: [96, 96, 96]}
+  - {id: 13, parent: 6, name: pool,              name_tr: Havuz,                  color: [0, 191, 255]}
+  - {id: 14, parent: 6, name: lake_reservoir,    name_tr: Göl / baraj,            color: [30, 144, 255]}
+  - {id: 15, parent: 6, name: river_canal,       name_tr: Nehir / kanal,          color: [65, 105, 225]}
+  - {id: 16, parent: 7, name: forest,            name_tr: Orman / ağaçlık,        color: [34, 139, 34]}
+  - {id: 17, parent: 7, name: grassland,         name_tr: Çayır / mera,           color: [144, 238, 144]}
+  - {id: 18, parent: 8, name: solar_panel,       name_tr: Güneş paneli (GES),     color: [148, 0, 211]}
