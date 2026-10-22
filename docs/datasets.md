@@ -52,5 +52,5 @@ Semantic Segmentation", NeurIPS Datasets and Benchmarks 2021.
 | Energy (solar) | none | none |
 
 Neither dataset has construction sites, solar panels, greenhouses, pools as a separate class,
-parking lots or orchards. These need the custom dataset (week 5). The final class mapping
-files are written in week 2 under `configs/mappings/`.
+parking lots or orchards. These need the custom dataset (week 5). The class mappings are in
+`configs/mappings/` (rationale per class, see `docs/reports/week-02.md`).
