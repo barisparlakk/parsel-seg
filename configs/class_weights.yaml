@@ -1,0 +1,31 @@
+dataset: openearthmap
+split: train
+note: median frequency balancing; classes absent from the data have weight 0
+pixels:
+  background: 402931049
+  buildings: 373492234
+  construction: 0
+  vacant_land: 35688451
+  agriculture: 235975157
+  transport: 140302647
+  water: 53370765
+  vegetation: 760009022
+  energy: 0
+weights:
+  background: 0.5856
+  buildings: 0.6318
+  construction: 0.0
+  vacant_land: 6.6121
+  agriculture: 1.0
+  transport: 1.6819
+  water: 4.4214
+  vegetation: 0.3105
+  energy: 0.0
+channel_mean:
+- 0.4603
+- 0.4668
+- 0.4123
+channel_std:
+- 0.1965
+- 0.1793
+- 0.1857
