@@ -1,0 +1,15 @@
+# Raw LoveDA mask value -> Parsel main class id (see configs/classes.yaml).
+# 255 = ignore_index (excluded from loss and metrics).
+dataset: loveda
+verified: false  # encoding (0 = no-data, 1 = background) not yet checked on real masks; LoveDA is not downloaded
+ignore_index: 255
+
+mapping:
+  0: {name: no-data,     target: 255, why: "no label"}
+  1: {name: background,  target: 0,   why: "other"}
+  2: {name: building,    target: 1,   why: "buildings"}
+  3: {name: road,        target: 5,   why: "transport"}
+  4: {name: water,       target: 6,   why: "water"}
+  5: {name: barren,      target: 3,   why: "bare ground; vacant land"}
+  6: {name: forest,      target: 7,   why: "vegetation"}
+  7: {name: agriculture, target: 4,   why: "agriculture"}

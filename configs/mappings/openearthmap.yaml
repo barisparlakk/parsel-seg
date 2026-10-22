@@ -1,0 +1,16 @@
+# Raw OpenEarthMap mask value -> Parsel main class id (see configs/classes.yaml).
+# 255 = ignore_index (excluded from loss and metrics).
+dataset: openearthmap
+verified: true  # raw encoding confirmed against sample overlays in notebooks/01_eda.ipynb
+ignore_index: 255
+
+mapping:
+  0: {name: unlabeled,   target: 255, why: "no label; must not be trained on"}
+  1: {name: bareland,    target: 3,   why: "bare ground is the closest match to vacant land"}
+  2: {name: rangeland,   target: 7,   why: "grass and shrub cover; vegetation (grassland subclass)"}
+  3: {name: developed,   target: 0,   why: "paved yards, plazas and other built surface that is neither building nor road; kept as other/background rather than forced into vacant land"}
+  4: {name: road,        target: 5,   why: "transport"}
+  5: {name: tree,        target: 7,   why: "vegetation (forest subclass)"}
+  6: {name: water,       target: 6,   why: "water"}
+  7: {name: agriculture, target: 4,   why: "agriculture"}
+  8: {name: building,    target: 1,   why: "buildings"}
