@@ -21,10 +21,10 @@ import yaml
 from torch.utils.data import DataLoader
 
 from parsel.data.dataset import TileDataset, build_transforms
-from parsel.models.factory import build_model
+from parsel.models.factory import build_model, count_parameters
 from parsel.train import resolve_device
 from parsel.utils.classes import Taxonomy
-from parsel.utils.metrics import ConfusionMatrix
+from parsel.utils.metrics import BoundaryIoU, ConfusionMatrix
 from parsel.utils.viz import colorize, denormalize
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -99,6 +99,7 @@ def main() -> None:
     p.add_argument("--checkpoint", default="best.pt")
     p.add_argument("--worst", type=int, default=10)
     p.add_argument("--batch-size", type=int, default=8)
+    p.add_argument("--boundary-width", type=int, default=3, help="boundary IoU band in pixels")
     p.add_argument("--figures", type=Path, default=ROOT / "docs" / "figures")
     args = p.parse_args()
 
@@ -110,11 +111,13 @@ def main() -> None:
     loader = DataLoader(ds, args.batch_size, shuffle=False, num_workers=4)
 
     cm = ConfusionMatrix(len(names), tax.ignore_index)
+    bd = BoundaryIoU(len(names), args.boundary_width, tax.ignore_index)
     scores = []
     with torch.no_grad():
         for batch in loader:
             pred = model(batch["image"].to(device)).argmax(1).cpu()
             cm.update(pred, batch["mask"])
+            bd.update(pred.to(device), batch["mask"].to(device))
             scores += [
                 tile_score(pr, tg, len(names)) for pr, tg in zip(pred, batch["mask"], strict=True)
             ]
@@ -124,14 +127,20 @@ def main() -> None:
     result = {
         "run": args.run.name, "checkpoint": args.checkpoint, "epoch": epoch, "split": args.split,
         "tiles": len(ds), "miou": s["miou"], "mf1": s["mf1"], "pixel_acc": s["pixel_acc"],
+        "boundary_miou": bd.miou(), "boundary_width": args.boundary_width,
+        "params_m": count_parameters(model) / 1e6,
         "iou": {n: None if np.isnan(v) else float(v) for n, v in zip(names, s["iou"], strict=True)},
         "f1": {n: None if np.isnan(v) else float(v) for n, v in zip(names, s["f1"], strict=True)},
+        "boundary_iou": {n: None if np.isnan(v) else float(v)
+                         for n, v in zip(names, bd.iou(), strict=True)},
         "gt_pixels": {n: int(v) for n, v in zip(names, cm.mat.sum(1), strict=True)},
+        "confusion": cm.mat.tolist(),
     }  # fmt: skip
     (args.run / f"eval_{args.split}.json").write_text(json.dumps(result, indent=2))
 
     print(f"{tag}: {len(ds)} tiles, checkpoint epoch {epoch}")
-    print(f"mIoU {s['miou']:.4f}  mF1 {s['mf1']:.4f}  pixel acc {s['pixel_acc']:.4f}")
+    print(f"mIoU {s['miou']:.4f}  mF1 {s['mf1']:.4f}  pixel acc {s['pixel_acc']:.4f}  "
+          f"boundary mIoU (+-{args.boundary_width}px) {bd.miou():.4f}")  # fmt: skip
     print(f"{'class':<14}{'IoU':>8}{'F1':>8}{'GT pixels':>14}")
     for i, n in enumerate(names):
         iou = "-" if np.isnan(s["iou"][i]) else f"{s['iou'][i]:.4f}"

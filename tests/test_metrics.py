@@ -52,3 +52,31 @@ def test_works_on_image_shaped_input():
     cm = ConfusionMatrix(3)
     cm.update(pred, pred)
     assert cm.summary()["miou"] == 1.0
+
+
+def test_boundary_iou_perfect_and_shifted():
+    from parsel.utils.metrics import BoundaryIoU
+
+    gt = torch.zeros(1, 32, 32, dtype=torch.long)
+    gt[:, 8:24, 8:24] = 1
+    b = BoundaryIoU(2, width=2)
+    b.update(gt, gt)
+    assert b.miou() == 1.0
+
+    shifted = torch.zeros_like(gt)
+    shifted[:, 8:24, 12:28] = 1  # same shape moved 4 px: plain IoU 0.6, bands overlap far less
+    b = BoundaryIoU(2, width=2)
+    b.update(shifted, gt)
+    plain = _cm(shifted.flatten().tolist(), gt.flatten().tolist(), n=2).iou()[1]
+    assert b.iou()[1] < plain
+
+
+def test_boundary_iou_skips_absent_and_ignored():
+    from parsel.utils.metrics import BoundaryIoU
+
+    gt = torch.full((1, 16, 16), 255)
+    gt[:, :8] = 0
+    b = BoundaryIoU(3, width=1, ignore_index=255)
+    b.update(torch.zeros(1, 16, 16, dtype=torch.long), gt)
+    assert b.present.tolist() == [True, False, False]
+    assert not np.isnan(b.miou())
