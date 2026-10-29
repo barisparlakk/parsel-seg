@@ -4,6 +4,7 @@ Usage:
     python scripts/train.py --config configs/train/unet_r34.yaml
     python scripts/train.py --config configs/train/unet_r34.yaml --overfit 16 --epochs 40
     python scripts/train.py --config configs/train/unet_r34.yaml --resume runs/unet_r34/last.pt
+    python scripts/train.py --config configs/train/unet_r34.yaml --set data.num_workers=2
 """
 
 import argparse
@@ -22,6 +23,7 @@ from parsel.losses import build_loss
 from parsel.models.factory import build_model, count_parameters
 from parsel.train import Trainer, resolve_device
 from parsel.utils.classes import Taxonomy
+from parsel.utils.config import apply_overrides
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -50,11 +52,15 @@ def main() -> None:
     p.add_argument("--epochs", type=int, help="override train.epochs")
     p.add_argument("--overfit", type=int, metavar="N", help="train and validate on N train tiles")
     p.add_argument("--max-batches", type=int, help="limit batches per epoch (smoke tests)")
+    p.add_argument(
+        "--set", dest="overrides", action="append", default=[], metavar="KEY=VALUE",
+        help="override a config value, e.g. --set data.num_workers=2 (repeatable)",
+    )  # fmt: skip
     p.add_argument("--resume", type=Path)
     p.add_argument("--runs", type=Path, default=ROOT / "runs")
     args = p.parse_args()
 
-    cfg = yaml.safe_load(args.config.read_text())
+    cfg = apply_overrides(yaml.safe_load(args.config.read_text()), args.overrides)
     if args.epochs:
         cfg["train"]["epochs"] = args.epochs
     if args.max_batches:
