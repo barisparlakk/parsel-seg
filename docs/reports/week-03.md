@@ -58,12 +58,15 @@ hardware gives slightly different numbers, so every Week 4 comparison runs on on
   (IoU 0.26) and is only 1% of test pixels. The class weight for it is already 6.6.
 - Background ("developed", paved yards and plazas) scores 0.48: it borders buildings and
   roads and has no clear visual definition. This was the least certain mapping in Week 2.
-- The stopped Mac run at epoch 5 scored 0.563 on val and the final Colab model 0.579 on
-  test: ten more epochs added little. Val and test regions differ, so this is a rough
-  comparison, but it suggests the baseline is near its plateau and Week 4 gains should come
-  from the model, loss and data rather than longer training.
-- Not yet checked: whether the model predicts construction or energy anywhere. That needs the
-  test confusion matrix (`runs/<run>/eval_test.json`).
+- The stopped Mac run (6 epochs, checkpoint epoch 5) scores 0.523 mIoU on the same test
+  tiles, against 0.579 for the full 15-epoch Colab run. The extra epochs added 0.056 mIoU,
+  mostly on water (0.41 -> 0.58), background (0.41 -> 0.48), agriculture and transport. Vacant
+  land did not move (0.254 -> 0.257). So the baseline had not plateaued at epoch 6, but vacant
+  land is limited by something other than training length.
+- The Mac model never predicts construction or energy (0 of 377.5M test pixels). The Colab
+  model was not checked: its `eval_test.json` was not copied from Drive.
+- Boundary IoU (3 px band) is 0.156 for the Mac model, far below its mIoU 0.523: region
+  interiors are mostly right, edges are not. Added to `evaluate.py` in Week 4.
 
 ## Bugs found and fixed
 - `CrossEntropyLoss` returns NaN when every pixel of a batch is ignored; `CombinedLoss` now
