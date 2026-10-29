@@ -8,6 +8,8 @@ ARCHS = {
     "unetplusplus": smp.UnetPlusPlus,
     "deeplabv3plus": smp.DeepLabV3Plus,
     "fpn": smp.FPN,
+    "segformer": smp.Segformer,
+    "upernet": smp.UPerNet,
 }
 
 

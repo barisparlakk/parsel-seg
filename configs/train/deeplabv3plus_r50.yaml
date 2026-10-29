@@ -1,0 +1,34 @@
+# DeepLabV3+ with a ResNet50 encoder (ImageNet): same recipe as the U-Net baseline.
+name: deeplabv3plus_r50
+seed: 42
+
+data:
+  manifest: data/processed/openearthmap/manifest.csv
+  crop_size: 384
+  batch_size: 8
+  num_workers: 4
+
+model:
+  arch: deeplabv3plus
+  encoder: resnet50
+  encoder_weights: imagenet
+
+loss:
+  type: ce_dice
+  ce_weight: 1.0
+  dice_weight: 1.0
+  class_weights: configs/class_weights.yaml
+  weight_power: 0.5
+
+train:
+  epochs: 15
+  lr: 0.0003
+  weight_decay: 0.0001
+  warmup_epochs: 1
+  min_lr: 0.000001
+  grad_clip: 1.0
+  amp: auto
+  early_stop_patience: 5
+  min_delta: 0.001
+  log_every: 100
+  device: auto

@@ -1,0 +1,35 @@
+# SegFormer-B2 (MiT-B2 encoder, ImageNet) against the U-Net baseline. Transformers train best
+# with a smaller learning rate than the CNN encoders, so lr is 1e-4 here instead of 3e-4.
+name: segformer_b2
+seed: 42
+
+data:
+  manifest: data/processed/openearthmap/manifest.csv
+  crop_size: 384
+  batch_size: 8
+  num_workers: 4
+
+model:
+  arch: segformer
+  encoder: mit_b2
+  encoder_weights: imagenet
+
+loss:
+  type: ce_dice
+  ce_weight: 1.0
+  dice_weight: 1.0
+  class_weights: configs/class_weights.yaml
+  weight_power: 0.5
+
+train:
+  epochs: 15
+  lr: 0.0001
+  weight_decay: 0.0001
+  warmup_epochs: 1
+  min_lr: 0.000001
+  grad_clip: 1.0
+  amp: auto
+  early_stop_patience: 5
+  min_delta: 0.001
+  log_every: 100
+  device: auto
