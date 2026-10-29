@@ -59,6 +59,8 @@ def main() -> None:
         cfg["train"]["epochs"] = args.epochs
     if args.max_batches:
         cfg["train"]["max_train_batches"] = args.max_batches
+    if args.overfit:
+        cfg["train"]["early_stop_patience"] = 0  # validation is on the training tiles
     name = args.name or (f"{cfg['name']}_overfit{args.overfit}" if args.overfit else cfg["name"])
     seed_everything(cfg.get("seed", 42))
 
