@@ -1,0 +1,34 @@
+# Baseline: U-Net + ImageNet-pretrained ResNet34 on OpenEarthMap tiles.
+name: unet_r34
+seed: 42
+
+data:
+  manifest: data/processed/openearthmap/manifest.csv
+  crop_size: 384        # random crop used for training; validation uses full 512 tiles
+  batch_size: 8
+  num_workers: 4
+
+model:
+  arch: unet
+  encoder: resnet34
+  encoder_weights: imagenet
+
+loss:
+  type: ce_dice
+  ce_weight: 1.0
+  dice_weight: 1.0
+  class_weights: configs/class_weights.yaml   # median-frequency weights; null to disable
+  weight_power: 0.5                           # <1 softens the weights (1.0 = raw)
+
+train:
+  epochs: 15
+  lr: 0.0003
+  weight_decay: 0.0001
+  warmup_epochs: 1
+  min_lr: 0.000001
+  grad_clip: 1.0
+  amp: auto                 # on only for CUDA; no speedup on Apple MPS
+  early_stop_patience: 5
+  min_delta: 0.001
+  log_every: 100
+  device: auto
