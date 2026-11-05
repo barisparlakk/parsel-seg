@@ -9,6 +9,7 @@ Usage:
 
 import argparse
 import json
+import time
 from pathlib import Path
 
 import matplotlib
@@ -37,6 +38,27 @@ def load_model(run: Path, ckpt: str, num_classes: int, device: torch.device):
     state = torch.load(run / ckpt, map_location="cpu", weights_only=False)
     model.load_state_dict(state["model"])
     return cfg, model.to(device).eval(), state.get("epoch")
+
+
+@torch.no_grad()
+def measure_speed(model, device, size: int = 512, batch: int = 8, iters: int = 20) -> float:
+    """Forward-pass throughput in images/s on random input (fp32, no data loading)."""
+
+    def sync():
+        if device.type == "cuda":
+            torch.cuda.synchronize()
+        elif device.type == "mps":
+            torch.mps.synchronize()
+
+    x = torch.randn(batch, 3, size, size, device=device)
+    for _ in range(3):  # warm-up: kernel selection, allocator
+        model(x)
+    sync()
+    t0 = time.perf_counter()
+    for _ in range(iters):
+        model(x)
+    sync()
+    return batch * iters / (time.perf_counter() - t0)
 
 
 def tile_score(pred: torch.Tensor, target: torch.Tensor, num_classes: int) -> float:
@@ -129,6 +151,7 @@ def main() -> None:
         "tiles": len(ds), "miou": s["miou"], "mf1": s["mf1"], "pixel_acc": s["pixel_acc"],
         "boundary_miou": bd.miou(), "boundary_width": args.boundary_width,
         "params_m": count_parameters(model) / 1e6,
+        "infer_img_per_s": measure_speed(model, device), "infer_device": device.type,
         "iou": {n: None if np.isnan(v) else float(v) for n, v in zip(names, s["iou"], strict=True)},
         "f1": {n: None if np.isnan(v) else float(v) for n, v in zip(names, s["f1"], strict=True)},
         "boundary_iou": {n: None if np.isnan(v) else float(v)
@@ -141,6 +164,7 @@ def main() -> None:
     print(f"{tag}: {len(ds)} tiles, checkpoint epoch {epoch}")
     print(f"mIoU {s['miou']:.4f}  mF1 {s['mf1']:.4f}  pixel acc {s['pixel_acc']:.4f}  "
           f"boundary mIoU (+-{args.boundary_width}px) {bd.miou():.4f}")  # fmt: skip
+    print(f"inference {result['infer_img_per_s']:.1f} img/s (512 px, batch 8, {device.type})")
     print(f"{'class':<14}{'IoU':>8}{'F1':>8}{'GT pixels':>14}")
     for i, n in enumerate(names):
         iou = "-" if np.isnan(s["iou"][i]) else f"{s['iou'][i]:.4f}"

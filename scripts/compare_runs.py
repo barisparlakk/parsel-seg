@@ -41,6 +41,7 @@ def load_run(run: Path, split: str) -> dict | None:
         "run": run.name,
         "model": f"{model.get('arch', '?')}/{model.get('encoder', '?')}",
         "params_m": ev.get("params_m"),
+        "infer": ev.get("infer_img_per_s"),
         "miou": ev["miou"],
         "mf1": ev["mf1"],
         "boundary_miou": ev.get("boundary_miou"),
@@ -59,14 +60,15 @@ def fmt(v, spec: str = ".4f") -> str:
 
 def table(rows: list[dict]) -> str:
     head = ("| Run | Model | Params (M) | mIoU | mF1 | Boundary mIoU | Pixel acc | Best val mIoU "
-            "| Epochs | Train min | Pred. on absent classes |")  # fmt: skip
-    lines = [head, "|" + "---|" * 11]
+            "| Epochs | Train min | Infer img/s | Pred. on absent classes |")  # fmt: skip
+    lines = [head, "|" + "---|" * 12]
     for r in rows:
         fp = "-" if r["absent_fp"] is None else f"{100 * r['absent_fp']:.2f}%"
         lines.append(
             f"| {r['run']} | {r['model']} | {fmt(r['params_m'], '.1f')} | {r['miou']:.4f} "
             f"| {r['mf1']:.4f} | {fmt(r['boundary_miou'])} | {r['pixel_acc']:.4f} "
-            f"| {fmt(r['best_val_miou'])} | {r['epochs']} | {fmt(r['minutes'], '.0f')} | {fp} |"
+            f"| {fmt(r['best_val_miou'])} | {r['epochs']} | {fmt(r['minutes'], '.0f')} "
+            f"| {fmt(r['infer'], '.0f')} | {fp} |"
         )
     return "\n".join(lines)
 
