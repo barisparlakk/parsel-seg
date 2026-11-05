@@ -71,10 +71,27 @@ fewer parameters (24.7M vs 37.0M) and trains faster. UPerNet stays as the compar
 edges.
 
 ## Still to do this week (not run yet)
-Ablations on SegFormer-B2, one change at a time, same hardware:
-- loss: cross-entropy only (`loss.dice_weight=0`)
-- class weights: none (`loss.class_weights=null`) and raw weights (`loss.weight_power=1.0`)
-- training crop: 256 and 512 px (`data.crop_size`)
+Ablations on SegFormer-B2, one change at a time, same hardware. The baseline for each is the
+`segformer_b2_colab` run above (CE + Dice, weights with power 0.5, 384 px crops).
 
-Each is one Colab run (set `EXTRA` and `TAG` in the notebook); compare with
-`scripts/compare_runs.py`.
+| Question | `TAG` | `EXTRA` |
+|---|---|---|
+| CE only | `_ce_only` | `--set loss.dice_weight=0` |
+| Focal + Dice | `_focal_dice` | `--set loss.type=focal_dice` |
+| No class weights | `_no_weights` | `--set loss.class_weights=null` |
+| Raw class weights | `_weights_full` | `--set loss.weight_power=1.0` |
+| Full 512 px tiles as training input | `_crop512` | `--set data.crop_size=512` |
+
+`focal_dice` uses focal loss (gamma 2, same class weights, same normalisation as CE) in place
+of the CE term. `evaluate.py` now also measures forward-pass speed (512 px, batch 8, fp32) and
+`compare_runs.py` lists it, so the inference-time column needs every run re-evaluated on the
+same GPU.
+
+### 768 px input: deferred to Week 6
+The plan compares 512 and 768 px input. On OpenEarthMap that cannot be done cleanly with tiles:
+72% of the images are 1024 px, so 768 px tiles start at 0 and 256 and overlap by two thirds
+(each pixel is seen up to 4 times, centres more than edges), and the 49 images of about
+440 x 406 px would be more than half padding and dropped. Train and test pixels would no
+longer match the 512 px runs. The fair version evaluates whole scenes with a sliding window,
+which Week 6 builds for inference anyway: then 512, 768 and full-scene windows can be scored
+on identical pixels.
