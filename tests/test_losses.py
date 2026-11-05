@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from parsel.losses import CombinedLoss, DiceLoss, build_loss
+from parsel.losses import CombinedLoss, DiceLoss, FocalLoss, build_loss
 
 
 def _logits_for(target, classes=3, confidence=20.0):
@@ -67,3 +67,29 @@ def test_build_loss_types_and_error():
         assert build_loss({"type": kind}, None) is not None
     with pytest.raises(ValueError):
         build_loss({"type": "nope"}, None)
+
+
+def test_focal_gamma_zero_matches_cross_entropy():
+    logits = torch.randn(2, 4, 8, 8)
+    y = torch.randint(0, 4, (2, 8, 8))
+    y[0, :2] = 255
+    w = torch.tensor([0.5, 1.0, 2.0, 1.5])
+    focal = FocalLoss(gamma=0.0, class_weights=w)(logits, y)
+    ce = torch.nn.CrossEntropyLoss(weight=w, ignore_index=255)(logits, y)
+    assert focal.item() == pytest.approx(ce.item(), rel=1e-5)
+
+
+def test_focal_downweights_easy_pixels():
+    y = torch.randint(0, 3, (1, 8, 8))
+    easy = _logits_for(y, confidence=5.0)
+    assert FocalLoss(gamma=2.0)(easy, y).item() < 0.1 * FocalLoss(gamma=0.0)(easy, y).item()
+
+
+def test_focal_dice_builds_and_handles_all_ignored():
+    loss = build_loss({"type": "focal_dice", "focal_gamma": 2.0}, None, 255)
+    assert isinstance(loss.ce, FocalLoss)
+    y = torch.full((1, 4, 4), 255)
+    logits = torch.randn(1, 3, 4, 4, requires_grad=True)
+    out = loss(logits, y)
+    assert torch.isfinite(out) and out.item() == pytest.approx(0.0, abs=1e-6)
+    out.backward()
